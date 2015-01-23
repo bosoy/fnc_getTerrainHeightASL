@@ -1,0 +1,99 @@
+/*
+	File: fnc_getTerrainHeightASL.sqf
+	Author: Dimon UA
+	Used scripts:
+	 1.Creating spiral - Author: ArseniyK
+	 2.Sort a numeric array - Author: VVL99
+	 Credits & Thanks: ArseniyK, VVL99
+	
+
+	Description:
+	Function to find maximum/minimum heights of the terrain
+
+	Parameter(s):
+	_this select 0: position (Array)
+	_this select 1: step (Number)
+	_this select 2: count (Number)
+	_this select 3: true - maximum heights, false minimum heights
+	_this select 4: the size of the returned array (Number)
+	_this select 5: debug (true - otional)
+
+	Returns:
+	Array - format PositionASL
+*/
+private ["_pos","_step","_count","_sort","_size","_debug"];
+
+_pos = _this select 0;
+_step = _this select 1;
+_count = _this select 2;
+_sort = _this select 3;
+_size = _this select 4;
+if ((count _this) > 5) then {_debug = _this select 5;}else{_debug =false;};
+
+//=============Creating spiral=============//
+step = _step;
+a = -0.3*step;
+posx = _pos select 0;
+posy = _pos select 1;
+x = 1;
+y = 1;
+arr = [[posx,posy, getTerrainHeightASL [posx, posy]], [posx+step, posy, getTerrainHeightASL [posx+step, posy]]];
+for "_i" from 0 to _count do 
+{
+	r = sqrt (x*x+y*y);
+	tx = a*x+r*y;
+	ty = a*y - r*x;
+	len = sqrt(tx*tx + ty*ty);
+	k = step/len;
+	x = x + tx*k;
+	y = y + ty*k;
+	arr set [_i+2,[x+posx,y+posy,getTerrainHeightASL [x+posx, y+posy]]];
+};
+if _debug then 
+{
+	{
+		call compile format ["
+			_m%1 = createMarker[""markerRed%1"",[ _x select 0,_x select 1]];
+			_m%1 setMarkerShape ""ICON"";
+			_m%1 setMarkerType ""DOT"";
+			_m%1 setmarkercolor ""colorred"";  ",_forEachIndex];
+	} foreach arr;
+};
+//==========Sort a numeric array=========//
+_res_sort = [];
+{
+	_k = _x;
+	_s = _x select 2;
+	_s_pos = 0;
+	{
+		if _sort then 
+		{
+			if (_s < (_x select 2)) then 
+			{
+				_s_pos = _s_pos + 1;
+			};
+		}else{
+			if (_s > (_x select 2)) then 
+			{
+				_s_pos = _s_pos + 1;
+			};	
+		};
+		
+	} foreach arr;
+	_res_sort set [_s_pos,_k];
+} foreach arr;
+
+_res_sort resize _size;
+if _debug then 
+{
+	{
+		call compile format ["
+			_m%1 = createMarker[""markerBlue%1"",[ _x select 0,_x select 1]];
+			_m%1 setMarkerShape ""ICON"";
+			_m%1 setMarkerType ""DOT"";
+			_m%1 setmarkercolor ""colorblue"";  ",_forEachIndex];
+	} foreach _res_sort;
+
+	//	hint str _res_sort_p;
+	//	copyToClipboard str _res_sort_p;
+};
