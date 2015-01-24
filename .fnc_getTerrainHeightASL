@@ -47,7 +47,7 @@ for "_i" from 0 to _count do
 	k = step/len;
 	x = x + tx*k;
 	y = y + ty*k;
-	arr set [_i+2,[x+posx,y+posy,getTerrainHeightASL [x+posx, y+posy]]];
+	arr set [_i+1,[x+posx,y+posy,getTerrainHeightASL [x+posx, y+posy]]];
 };
 if _debug then 
 {
